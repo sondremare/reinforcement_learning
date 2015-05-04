@@ -55,57 +55,13 @@ public class Agent {
      *  -1 - Poison
      *  0 - Nothing
      */
-    public double[] getSensorValues(Board board) {
-        double[] sensedValues = new double[SENSORS];
-        Cell.Type frontSensorCellType = null;
-        Cell.Type leftSensorCellType = null;
-        Cell.Type rightSensorCellType = null;
-        switch (headDirection) {
-            case Up:
-                frontSensorCellType = getCellType(new Position(position.getX(), position.getY()-1), board);
-                leftSensorCellType = getCellType(new Position(position.getX() - 1, position.getY()), board);
-                rightSensorCellType = getCellType(new Position(position.getX() + 1, position.getY()), board);
-                break;
-            case Left:
-                frontSensorCellType = getCellType(new Position(position.getX() - 1, position.getY()), board);
-                leftSensorCellType = getCellType(new Position(position.getX(), position.getY() + 1), board);
-                rightSensorCellType = getCellType(new Position(position.getX(), position.getY() - 1), board);
-                break;
-            case Right:
-                frontSensorCellType = getCellType(new Position(position.getX() + 1, position.getY()), board);
-                leftSensorCellType = getCellType(new Position(position.getX(), position.getY() - 1), board);
-                rightSensorCellType = getCellType(new Position(position.getX(), position.getY() + 1), board);
-                break;
-            case Down:
-                frontSensorCellType = getCellType(new Position(position.getX(), position.getY() + 1), board);
-                leftSensorCellType = getCellType(new Position(position.getX() + 1, position.getY()), board);
-                rightSensorCellType = getCellType(new Position(position.getX() - 1, position.getY()), board);
-                break;
-        }
-        if (frontSensorCellType == Cell.Type.Food) {
-            sensedValues[FOOD_FRONT_SENSOR] = 1;
-        } else if (frontSensorCellType == Cell.Type.Poison) {
-            sensedValues[POISON_FRONT_SENSOR] = 1;
-        }
-        if (leftSensorCellType == Cell.Type.Food) {
-            sensedValues[FOOD_LEFT_SENSOR] = 1;
-        } else if (leftSensorCellType == Cell.Type.Poison) {
-            sensedValues[POISON_LEFT_SENSOR] = 1;
-        }
-        if (rightSensorCellType == Cell.Type.Food) {
-            sensedValues[FOOD_RIGHT_SENSOR] = 1;
-        } else if (rightSensorCellType == Cell.Type.Poison) {
-            sensedValues[POISON_RIGHT_SENSOR] = 1;
-        }
-        return sensedValues;
-    }
 
     public int[] play(Board board, int sleepTime) {
         foodEaten = 0;
         poisonEaten = 0;
         //eat(board);
         for (int i = 0; i < MAX_TIMESTEPS; i++) {
-            playStep(board);
+            //playStep(board);
             try {
                 Thread.sleep(sleepTime);
             } catch (InterruptedException e) {
@@ -116,7 +72,7 @@ public class Agent {
         return eaten;
     }
 
-    public void playStep(Board board) {
+    /*public void playStep(Board board) {
         double[] sensorValues = getSensorValues(board);
         //neuralNetwork.setInput(sensorValues);
         //double[] output = neuralNetwork.getOutput();
@@ -128,7 +84,7 @@ public class Agent {
         else if (highestIndex == 2) movement = Movement.Right;
         move(board, movement); //TODO base it on the phenotypes weighting
         //eat(board);
-    }
+    }*/
     
     private int getMaxIndex(double[] output) {
         double highestOutput = 0;
@@ -142,7 +98,7 @@ public class Agent {
         return highestIndex;
     }
 
-    public void eat(Board board) {
+    /*public void eat(Board board) {
         Cell.Type cellType = getCellType(position, board);
         switch (cellType) {
             case Food:
@@ -160,7 +116,7 @@ public class Agent {
     }
     public Cell.Type getCellType(Position position, Board board) {
         return board.getCell(position.getX(), position.getY()).getType();
-    }
+    }*/
 
     public void move(Board board, Movement movement) {
         switch (headDirection) {

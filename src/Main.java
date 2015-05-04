@@ -1,5 +1,6 @@
 import flatland.Agent;
 import flatland.Board;
+import gui.FlatlandGui;
 import javafx.application.Application;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -33,6 +34,15 @@ public class Main extends Application {
         final FileChooser fileChooser = new FileChooser();
 
         Button openFileButton = new Button("Choose file");
+
+        final GridPane gridPane = new GridPane();
+        gridPane.setPrefSize(1000, 525);
+        gridPane.add(openFileButton, 0, 0);
+
+        primaryStage.setScene(new Scene(gridPane));
+        primaryStage.show();
+
+
         openFileButton.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent actionEvent) {
@@ -68,6 +78,7 @@ public class Main extends Application {
                                 agent = new Agent(xPos, yPos);
                                 firstLine = false;
                             } else {
+                                System.out.println(line);
                                 String[] lineStringValues = line.split(" ");
                                 for (int i = 0; i < lineStringValues.length; i++) {
                                     boardValues[counter][i] = Integer.parseInt(lineStringValues[i]);
@@ -77,6 +88,8 @@ public class Main extends Application {
                         }
                         fileReader.close();
                         board = new Board(boardValues, foods);
+                        if (gridPane.getChildren().size() > 1) gridPane.getChildren().remove(1);
+                        gridPane.add(FlatlandGui.initGUI(board, agent), 0, 1);
 
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -85,11 +98,7 @@ public class Main extends Application {
             }
         });
 
-        GridPane gridPane = new GridPane();
-        gridPane.add(openFileButton, 0, 0);
 
-        primaryStage.setScene(new Scene(gridPane));
-        primaryStage.show();
     }
 
     public static void main(String[] args) {

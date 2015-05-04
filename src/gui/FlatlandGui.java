@@ -14,21 +14,18 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
 import javafx.util.Duration;
-import java.util.ArrayList;
 
-public class FlatlandGui {/*
+public class FlatlandGui {
     private static double PLAY_SPEED = 150;
     private static boolean isPlaying = false;
     private static Timeline loop;
-    private static int width = 40;
-    private static int height = 40;
+    private static int WIDTH = 25;
+    private static int HEIGHT = 25;
     private static ImageView agentImageView;
     private static GridPane flatlandGrid;
-   // private static ImageView[][] referenceArray = new ImageView[Board.SIZE][Board.SIZE];
-    private static ArrayList<Board> boards;
+    private static ImageView[][] referenceArray;
     private static Board currentBoard;
-    private static int boardCounter = 0;
-    private static Agent agent;
+    private static Agent currentAgent;
     private static int timeStep = 0;
     private static Image agentImage = new Image("/images/agent.png", true);
     private static Image foodImage = new Image("/images/food.png", true);
@@ -38,21 +35,17 @@ public class FlatlandGui {/*
     private static Label foodEatenLabel;
     private static Label poisonEatenLabel;
 
-    public static AnchorPane initGUI() {
+    public static AnchorPane initGUI(Board board, Agent currentAgent) {
         timeStep = 0;
-        boardCounter= 0;
-
-        boards = new ArrayList<Board>();
 
         AnchorPane root = new AnchorPane();
-
         flatlandGrid = new GridPane();
         flatlandGrid.setPrefSize(400, 400);
         flatlandGrid.setGridLinesVisible(true);
         agentImageView = new ImageView(agentImage);
-        agentImageView.setFitHeight(40);
-        agentImageView.setFitWidth(40);
-        setBoard(currentBoard);
+        agentImageView.setFitHeight(HEIGHT);
+        agentImageView.setFitWidth(WIDTH);
+        setBoard(board, currentAgent);
 
         GridPane controlPanel = new GridPane();
         controlPanel.setPrefSize(300, 300);
@@ -95,13 +88,13 @@ public class FlatlandGui {/*
                 }
             }
         });
-        final Button nextBoardButton = new Button("Next board");
+        /*final Button nextBoardButton = new Button("Next board");
         nextBoardButton.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent actionEvent) {
                 getNextBoard();
             }
-        });
+        });*/
 
         final Slider playSpeedSlider = new Slider(0, 2000, FlatlandGui.PLAY_SPEED);
         playSpeedSlider.setBlockIncrement(100);
@@ -125,9 +118,9 @@ public class FlatlandGui {/*
             public void handle(ActionEvent actionEvent) {
                 int numberOfBoards = Integer.parseInt(numberOfBoardsInput.getText());
                 //boards = neuralProblem.generateScenarios(numberOfBoards);
-                boardCounter = 0;
-                currentBoard = boards.get(boardCounter).clone();
-                setBoard(currentBoard);
+                //boardCounter = 0;
+                //currentBoard = boards.get(boardCounter).clone();
+                //setBoard(currentBoard);
             }
         });
         controlPanel.add(boardCountLabel, 0, 0);
@@ -138,7 +131,7 @@ public class FlatlandGui {/*
         controlPanel.add(playButton, 0, 5);
         controlPanel.add(playSpeedSlider, 0, 6);
         controlPanel.add(playSpeedValue, 1, 6);
-        controlPanel.add(nextBoardButton, 0, 7);
+        //controlPanel.add(nextBoardButton, 0, 7);
         controlPanel.add(numberOfBoardsLabel, 0, 8);
         controlPanel.add(numberOfBoardsInput, 1, 8);
         controlPanel.add(generateBoardsButton, 0, 9);
@@ -151,57 +144,49 @@ public class FlatlandGui {/*
         return root;
     }
 
-    public static void setBoard(Board board) {
-        agent = new Agent();
+    public static void setBoard(Board board, Agent agent) {
         timeStep = 0;
+        currentBoard = board;
+        currentAgent = agent;
         updateLabels(agent);
-        Cell[][] cell = board.getCells();
+        int[][] cells = board.getCells();
+        referenceArray = new ImageView[cells.length][cells[0].length];
         ImageView imageView = null;
-        for (int i = 0; i < cell.length; i++) {
-            for (int j = 0; j < cell[i].length; j++) {
-                Cell currentCell = cell[i][j];
-                if (currentCell.getType() == Cell.Type.Food) {
+        for (int i = 0; i < cells.length; i++) {
+            for (int j = 0; j < cells[i].length; j++) {
+                int currentCell = cells[i][j];
+                if (currentCell > 0) {
                     imageView = new ImageView(foodImage);
-                } else if (currentCell.getType() == Cell.Type.Poison) {
+                } else if (currentCell == -1) {
                     imageView = new ImageView(poisonImage);
                 } else {
                     imageView = new ImageView();
                 }
-                imageView.setFitWidth(40);
-                imageView.setFitHeight(40);
+                imageView.setFitWidth(WIDTH);
+                imageView.setFitHeight(HEIGHT);
                 if (referenceArray[i][j] != null) {
                     flatlandGrid.getChildren().remove(referenceArray[i][j]);
                 }
-                flatlandGrid.add(imageView, i, j);
+                flatlandGrid.add(imageView, j, i);
                 referenceArray[i][j] = imageView;
             }
         }
-
-        move(agent.getX(), agent.getY());
+        move(currentAgent.getX(), currentAgent.getY());
 
     }
 
     public static void playTimeStep() {
         if (timeStep == 0) {
-            agent.eat(currentBoard);
+            //currentAgent.eat(currentBoard);
         }
-        agent.playStep(currentBoard);
-        move(agent.getX(), agent.getY());
+        //currentAgent.playStep(currentBoard);
+        move(currentAgent.getX(), currentAgent.getY());
         timeStep++;
-        updateLabels(agent);
-    }
-
-    public static void getNextBoard() {
-        boardCounter++;
-        if (boardCounter < boards.size()) {
-            currentBoard = boards.get(boardCounter).clone();
-            setBoard(currentBoard);
-            updateLabels(agent);
-        }
+        updateLabels(currentAgent);
     }
 
     public static void move(int x, int y) {
-        switch (agent.getHeadDirection()) {
+        switch (currentAgent.getHeadDirection()) {
             case Left:
                 agentImageView.rotateProperty().setValue(-90);
                 break;
@@ -215,13 +200,13 @@ public class FlatlandGui {/*
                 agentImageView.rotateProperty().setValue(180);
                 break;
         }
-        agentImageView.setX(x*width);
-        agentImageView.setY(y*height);
+        agentImageView.setX(x * WIDTH);
+        agentImageView.setY(y * HEIGHT);
 
         flatlandGrid.getChildren().remove(referenceArray[x][y]);
         ImageView emptyImageView = new ImageView();
-        emptyImageView.setFitWidth(40);
-        emptyImageView.setFitHeight(40);
+        emptyImageView.setFitWidth(WIDTH);
+        emptyImageView.setFitHeight(HEIGHT);
         flatlandGrid.add(emptyImageView, x, y);
     }
 
@@ -230,9 +215,8 @@ public class FlatlandGui {/*
         if (stepCountLabel == null) stepCountLabel = new Label();
         if (foodEatenLabel == null) foodEatenLabel = new Label();
         if (poisonEatenLabel == null) poisonEatenLabel = new Label();
-        boardCountLabel.setText("Board: "+(boardCounter+1)+" of "+boards.size());
         stepCountLabel.setText("Steps: "+timeStep+" of "+Agent.MAX_TIMESTEPS);
         foodEatenLabel.setText("Food: "+agent.getFoodEaten());
         poisonEatenLabel.setText("Poison: "+agent.getPoisonEaten());
-    }*/
+    }
 }
