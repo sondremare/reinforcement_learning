@@ -7,11 +7,14 @@ import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import learning.QLearning;
 
+import javax.xml.soap.Text;
 import java.io.*;
 
 public class Main extends Application {
@@ -35,10 +38,20 @@ public class Main extends Application {
         final FileChooser fileChooser = new FileChooser();
 
         Button openFileButton = new Button("Choose file");
+        Label iterationsLabel = new Label("Iterations: ");
+        final TextField iterationsInput = new TextField("100");
+        iterationsInput.setPrefWidth(100);
+        Button learnButton = new Button("Learn!");
+
+        GridPane controlPane = new GridPane();
+        controlPane.add(openFileButton, 0, 0);
+        controlPane.add(iterationsLabel, 1, 0);
+        controlPane.add(iterationsInput, 2, 0);
+        controlPane.add(learnButton, 3, 0);
 
         final GridPane gridPane = new GridPane();
         gridPane.setPrefSize(1000, 525);
-        gridPane.add(openFileButton, 0, 0);
+        gridPane.add(controlPane, 0, 0);
 
         primaryStage.setScene(new Scene(gridPane));
         primaryStage.show();
@@ -103,11 +116,6 @@ public class Main extends Application {
                         }
                         fileReader.close();
                         board = new Board(correctlyFlippedBoardValues, foods, xPos, yPos);
-                        QLearning qLearning = new QLearning(board);
-                        qLearning.iterate(100);
-                        if (gridPane.getChildren().size() > 1) gridPane.getChildren().remove(1);
-                        gridPane.add(FlatlandGui.initGUI(qLearning), 0, 1);
-
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -115,7 +123,20 @@ public class Main extends Application {
             }
         });
 
-
+        learnButton.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent actionEvent) {
+                if (board != null) {
+                    int iterations = Integer.parseInt(iterationsInput.getText());
+                    QLearning qLearning = new QLearning(board);
+                    qLearning.iterate(iterations);
+                    if (gridPane.getChildren().size() > 1) gridPane.getChildren().remove(1);
+                    gridPane.add(FlatlandGui.initGUI(qLearning), 0, 1);
+                } else {
+                    System.out.println("No board loaded!");
+                }
+            }
+        });
     }
 
     public static void main(String[] args) {

@@ -17,9 +17,6 @@ import javafx.scene.layout.GridPane;
 import javafx.util.Duration;
 import learning.QLearning;
 
-import java.util.HashMap;
-import java.util.Map;
-
 public class FlatlandGui {
     private static double PLAY_SPEED = 150;
     private static boolean isPlaying = false;
@@ -39,7 +36,6 @@ public class FlatlandGui {
     private static Image rightArrowImage = new Image("/images/arrow_right.png", true);
     private static Image downArrowImage = new Image("/images/arrow_down.png", true);
     private static Image lightBlueImage = new Image("/images/lightblue.png", true);
-    private static Label boardCountLabel;
     private static Label stepCountLabel;
     private static Label foodEatenLabel;
     private static Label poisonEatenLabel;
@@ -70,12 +66,9 @@ public class FlatlandGui {
         stepButton.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent actionEvent) {
-                if (!currentQLearning.getBoard().isFinished()) {
-                    playTimeStep();
-                }
-                //if (timeStep < Agent.MAX_TIMESTEPS) {
-
-                //}
+            if (!currentQLearning.getBoard().isFinished()) {
+                playTimeStep();
+            }
             }
         });
 
@@ -103,13 +96,6 @@ public class FlatlandGui {
                 }
             }
         });
-        /*final Button nextBoardButton = new Button("Next board");
-        nextBoardButton.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent actionEvent) {
-                getNextBoard();
-            }
-        });*/
 
         final Slider playSpeedSlider = new Slider(0, 2000, FlatlandGui.PLAY_SPEED);
         playSpeedSlider.setBlockIncrement(100);
@@ -124,32 +110,13 @@ public class FlatlandGui {
             }
         });
 
-        Label numberOfBoardsLabel = new Label("Number of boards: ");
-        final TextField numberOfBoardsInput = new TextField();
-        numberOfBoardsInput.setMaxWidth(50);
-        Button generateBoardsButton = new Button("Generate random board");
-        generateBoardsButton.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent actionEvent) {
-                int numberOfBoards = Integer.parseInt(numberOfBoardsInput.getText());
-                //boards = neuralProblem.generateScenarios(numberOfBoards);
-                //boardCounter = 0;
-                //currentBoard = boards.get(boardCounter).clone();
-                //setBoard(currentBoard);
-            }
-        });
-        controlPanel.add(boardCountLabel, 0, 0);
-        controlPanel.add(stepCountLabel, 0, 1);
-        controlPanel.add(foodEatenLabel, 0, 2);
-        controlPanel.add(poisonEatenLabel, 0, 3);
-        controlPanel.add(stepButton, 0, 4);
-        controlPanel.add(playButton, 0, 5);
-        controlPanel.add(playSpeedSlider, 0, 6);
+        controlPanel.add(stepCountLabel, 0, 0);
+        controlPanel.add(foodEatenLabel, 0, 1);
+        controlPanel.add(poisonEatenLabel, 0, 2);
+        controlPanel.add(stepButton, 0, 3);
+        controlPanel.add(playButton, 0, 4);
+        controlPanel.add(playSpeedSlider, 0, 5);
         controlPanel.add(playSpeedValue, 1, 6);
-        //controlPanel.add(nextBoardButton, 0, 7);
-        controlPanel.add(numberOfBoardsLabel, 0, 8);
-        controlPanel.add(numberOfBoardsInput, 1, 8);
-        controlPanel.add(generateBoardsButton, 0, 9);
 
         GridPane mainGrid = new GridPane();
         mainGrid.add(flatlandGrid, 0, 0);
@@ -162,7 +129,7 @@ public class FlatlandGui {
     public static void setBoard() {
         timeStep = 0;
         referenceArray = new ImageView[currentQLearning.getBoard().getWidth()][currentQLearning.getBoard().getHeight()];
-        updateLabels(currentQLearning.getBoard().getAgent());
+        updateLabels(currentQLearning.getBoard());
         updateImages(currentQLearning.getBoard());
         ImageView imageView = new ImageView(lightBlueImage);
         imageView.setFitWidth(WIDTH);
@@ -201,14 +168,8 @@ public class FlatlandGui {
         currentQLearning.getBoard().eat(currentQLearning.getBoard().getAgent().getPosition());
         updateImages(currentQLearning.getBoard());
         move(currentQLearning.getBoard().getAgent().getX(), currentQLearning.getBoard().getAgent().getY());
-
-        /*if (timeStep == 0) {
-            //currentAgent.eat(currentBoard);
-        }
-        //currentAgent.playStep(currentBoard);
-        move(currentAgent.getX(), currentAgent.getY());
+        updateLabels(currentQLearning.getBoard());
         timeStep++;
-        updateLabels(currentAgent);*/
     }
 
     public static void move(int x, int y) {
@@ -252,13 +213,12 @@ public class FlatlandGui {
         return imageView;
     }
 
-    public static void updateLabels(Agent agent) {
-        if (boardCountLabel == null) boardCountLabel = new Label();
+    public static void updateLabels(Board board) {
         if (stepCountLabel == null) stepCountLabel = new Label();
         if (foodEatenLabel == null) foodEatenLabel = new Label();
         if (poisonEatenLabel == null) poisonEatenLabel = new Label();
-        stepCountLabel.setText("Steps: "+timeStep+" of "+Agent.MAX_TIMESTEPS);
-        foodEatenLabel.setText("Food: "+agent.getFoodEaten());
-        poisonEatenLabel.setText("Poison: "+agent.getPoisonEaten());
+        stepCountLabel.setText("Steps: "+timeStep);
+        foodEatenLabel.setText("Food: "+board.getAgent().getFoodEaten()+ " of "+board.getFoodCount());
+        poisonEatenLabel.setText("Poison: "+board.getAgent().getPoisonEaten());
     }
 }

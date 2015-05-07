@@ -5,14 +5,13 @@ public class Board {
     private Cell[][] board;
     private int width;
     private int height;
-    private int foods;
+    private int foodCount;
     private Cell[] foodArray;
     private int startingX;
     private int startingY;
     private Agent agent;
     private String boardStringRepresentation;
     private static int EMPTY_CELL = 0;
-    private static int POISON_CELL = -1;
     private static int STEP_PENALTY = -1;
     private static int EAT_FOOD_REWARD = 10;
     private static int EAT_POISON_PENALTY = -15;
@@ -22,7 +21,7 @@ public class Board {
         this.board = cells;
         this.width = cells.length;
         this.height = cells[0].length;
-        this.foods = foods;
+        this.foodCount = foods;
         this.foodArray = new Cell[foods];
         this.initalBoard = new Cell[width][height];
         int foodCounter = 0;
@@ -39,6 +38,10 @@ public class Board {
         this.startingX = startingX;
         this.startingY = startingY;
         this.agent = new Agent(startingX, startingY);
+    }
+
+    public int getFoodCount() {
+        return foodCount;
     }
 
     public String getBoardStringRepresentation() {
@@ -80,10 +83,10 @@ public class Board {
         if (isFinished()) {
             return reward = RETURN_HOME_REWARD;
         }
-        double cellValue = getCellValue(position);
-        if (cellValue > 0) {
+        Cell.Type cellType = getCellType(position);
+        if (cellType == Cell.Type.Food) {
             reward = EAT_FOOD_REWARD;
-        } else if (cellValue == -1) {
+        } else if (cellType == Cell.Type.Poison) {
             reward = EAT_POISON_PENALTY;
         }
 
@@ -91,12 +94,10 @@ public class Board {
     }
 
     public void eat(Position position) {
+        Cell.Type cellType = getCellType(position);
+        agent.eat(cellType);
         emptyCellValue(position);
         updateBoardStringRepresentation();
-    }
-
-    public int getCellValue(Position position) {
-        return board[position.getX()][position.getY()].getValue();
     }
 
     public Cell.Type getCellType(Position position) {
@@ -131,7 +132,7 @@ public class Board {
                 cells[i][j] = new Cell(initalBoard[i][j].getType(), initalBoard[i][j].getValue());
             }
         }
-        return new Board(cells, this.foods, this.startingX, this.startingY);
+        return new Board(cells, this.foodCount, this.startingX, this.startingY);
     }
 
     public int getStartingX() {

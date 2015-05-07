@@ -4,6 +4,7 @@ import flatland.Agent;
 import flatland.Board;
 import flatland.Position;
 
+import java.text.DecimalFormat;
 import java.util.*;
 
 public class QLearning {
@@ -19,21 +20,7 @@ public class QLearning {
 
     public QLearning(Board board) {
         this.qStates = new HashMap<String, Double>();
-        //init(board);
         this.board = board;
-    }
-
-    public void init(Board board) {
-        String boardRepresentation = board.getBoardStringRepresentation();
-        for (int i = 0; i < board.getWidth(); i++) {
-            for (int j = 0; j < board.getHeight(); j++) {
-                for (int k = 0; k < ACTIONS.size(); k++) {
-                    String key = "" + i + j + k + boardRepresentation;
-                    //String key = ""+i+","+j+":"+boardRepresentation+":"+ACTIONS.get(k);
-                    qStates.put(key, 0.0);
-                }
-            }
-        }
     }
 
     public Board getBoard() {
@@ -42,15 +29,15 @@ public class QLearning {
 
     public String getKey(Agent.Direction action, Position position) {
         return ""+position.getX()+position.getY()+ACTIONS.indexOf(action)+board.getBoardStringRepresentation();
-        //return ""+position.getX()+","+position.getY()+":"+board.getBoardStringRepresentation()+":"+action;
     }
 
     public void playStep() {
-        Agent.Direction action = selectAction(board, 0); //best action
+        Agent.Direction action = selectAction(board, 0); //probability 0 equals best action
         board.play(action);
     }
 
     public void iterate(int count) {
+        long now = System.currentTimeMillis();
         Agent.Direction action;
         for (int i = 0; i < count; i++) {
             System.out.println(i);
@@ -65,6 +52,11 @@ public class QLearning {
                 updateQValue(action, currentPosition);
             }
         }
+        long later = System.currentTimeMillis();
+        double runTime = (double)(later - now)/1000;
+        DecimalFormat df = new DecimalFormat("#.##");
+        String runTimeFormatted = df.format(runTime);
+        System.out.println("Runtime: "+runTimeFormatted+"s");
     }
 
     public void updateQValue(Agent.Direction action, Position currentPosition) {
@@ -105,7 +97,6 @@ public class QLearning {
         String boardRepresentation = board.getBoardStringRepresentation();
         for (int i = 0; i < ACTIONS.size(); i++) {
             String key = "" + position.getX() + position.getY() + i + boardRepresentation;
-            //String key = "" + position.getX()+","+position.getY()+":"+boardRepresentation+":"+ACTIONS.get(i);
             double value = 0.0;
             Object state = qStates.get(key);
             if (state != null) value = (Double) state;
@@ -120,9 +111,5 @@ public class QLearning {
 
     public void setBoard(Board board) {
         this.board = board;
-    }
-
-    public HashMap<String, Double> getStates() {
-        return qStates;
     }
 }
