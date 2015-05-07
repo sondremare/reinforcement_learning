@@ -17,11 +17,19 @@ public class Agent {
     
     public Agent(int x, int y) {
         position = new Position(x, y);
-        headDirection = Direction.Right;
+        headDirection = Direction.Up;
     }
 
     public Direction getHeadDirection() {
         return headDirection;
+    }
+
+    public Position getPosition() {
+        return position;
+    }
+
+    public void setPosition(Position position) {
+        this.position = position;
     }
 
     public int getX() {
@@ -115,65 +123,28 @@ public class Agent {
         board.emptyCell(position.getX(), position.getY());
     }
     public Cell.Type getCellType(Position position, Board board) {
-        return board.getCell(position.getX(), position.getY()).getType();
+        return board.getCellValue(position.getX(), position.getY()).getType();
     }*/
 
-    public void move(Board board, Movement movement) {
-        switch (headDirection) {
+    public void move(Direction direction) {
+        headDirection = direction;
+        switch (direction) {
             case Up:
-                if (movement == Movement.Forward) {
-                    position.setY(position.getY() - 1);
-                } else if (movement == Movement.Left) {
-                    headDirection = Direction.Left;
-                    position.setX(position.getX() - 1);
-                } else if (movement == Movement.Right) {
-                    headDirection = Direction.Right;
-                    position.setX(position.getX() + 1);
-                }
+                position.setY(position.getY() - 1);
                 break;
             case Left:
-                if (movement == Movement.Forward) {
-                    position.setX(position.getX() - 1);
-                } else if (movement == Movement.Left) {
-                    headDirection = Direction.Down;
-                    position.setY(position.getY() + 1);
-                } else if (movement == Movement.Right) {
-                    headDirection = Direction.Up;
-                    position.setY(position.getY() - 1);
-                }
+                position.setX(position.getX() - 1);
                 break;
             case Right:
-                if (movement == Movement.Forward) {
-                    position.setX(position.getX() + 1);
-                } else if (movement == Movement.Left) {
-                    headDirection = Direction.Up;
-                    position.setY(position.getY() - 1);
-                } else if (movement == Movement.Right) {
-                    headDirection = Direction.Down;
-                    position.setY(position.getY() + 1);
-                }
+                position.setX(position.getX() + 1);
                 break;
             case Down:
-                if (movement == Movement.Forward) {
-                    position.setY(position.getY() + 1);
-                } else if (movement == Movement.Left) {
-                    headDirection = Direction.Right;
-                    position.setX(position.getX() + 1);
-                } else if (movement == Movement.Right) {
-                    headDirection = Direction.Left;
-                    position.setX(position.getX() - 1);
-                }
+                position.setY(position.getY() + 1);
                 break;
-
         }
-        board.toroidalCheck(position);
     }
 
     public enum Direction {
         Left, Right, Up, Down
-    }
-
-    public enum Movement {
-        Left, Right, Forward, Stay
     }
 }

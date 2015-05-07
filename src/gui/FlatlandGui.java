@@ -1,6 +1,7 @@
 package gui;
 
 import flatland.*;
+import flatland.Cell;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.beans.value.ChangeListener;
@@ -14,6 +15,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
 import javafx.util.Duration;
+import learning.QLearning;
 
 public class FlatlandGui {
     private static double PLAY_SPEED = 150;
@@ -24,18 +26,22 @@ public class FlatlandGui {
     private static ImageView agentImageView;
     private static GridPane flatlandGrid;
     private static ImageView[][] referenceArray;
-    private static Board currentBoard;
-    private static Agent currentAgent;
+    private static QLearning currentQLearning;
     private static int timeStep = 0;
     private static Image agentImage = new Image("/images/agent.png", true);
     private static Image foodImage = new Image("/images/food.png", true);
     private static Image poisonImage = new Image("/images/poison.png", true);
+    private static Image upArrowImage = new Image("/images/arrow_up.png", true);
+    private static Image leftArrowImage = new Image("/images/arrow_left.png", true);
+    private static Image rightArrowImage = new Image("/images/arrow_right.png", true);
+    private static Image downArrowImage = new Image("/images/arrow_down.png", true);
+    private static Image lightBlueImage = new Image("/images/lightblue.png", true);
     private static Label boardCountLabel;
     private static Label stepCountLabel;
     private static Label foodEatenLabel;
     private static Label poisonEatenLabel;
 
-    public static AnchorPane initGUI(Board board, Agent currentAgent) {
+    public static AnchorPane initGUI(QLearning qLearning) {
         timeStep = 0;
 
         AnchorPane root = new AnchorPane();
@@ -45,7 +51,10 @@ public class FlatlandGui {
         agentImageView = new ImageView(agentImage);
         agentImageView.setFitHeight(HEIGHT);
         agentImageView.setFitWidth(WIDTH);
-        setBoard(board, currentAgent);
+
+        currentQLearning = qLearning;
+        currentQLearning.setBoard(currentQLearning.getBoard().clone());
+        setBoard();
 
         GridPane controlPanel = new GridPane();
         controlPanel.setPrefSize(300, 300);
@@ -58,9 +67,12 @@ public class FlatlandGui {
         stepButton.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent actionEvent) {
-                if (timeStep < Agent.MAX_TIMESTEPS) {
+                if (!currentQLearning.getBoard().isFinished()) {
                     playTimeStep();
                 }
+                //if (timeStep < Agent.MAX_TIMESTEPS) {
+
+                //}
             }
         });
 
@@ -144,49 +156,60 @@ public class FlatlandGui {
         return root;
     }
 
-    public static void setBoard(Board board, Agent agent) {
+    public static void setBoard() {
         timeStep = 0;
-        currentBoard = board;
-        currentAgent = agent;
-        updateLabels(agent);
-        int[][] cells = board.getCells();
-        referenceArray = new ImageView[cells.length][cells[0].length];
+        referenceArray = new ImageView[currentQLearning.getBoard().getWidth()][currentQLearning.getBoard().getHeight()];
+        updateLabels(currentQLearning.getBoard().getAgent());
+        updateImages(currentQLearning.getBoard());
+        ImageView imageView = new ImageView(lightBlueImage);
+        imageView.setFitWidth(WIDTH);
+        imageView.setFitHeight(HEIGHT);
+        flatlandGrid.add(imageView, currentQLearning.getBoard().getStartingX(), currentQLearning.getBoard().getStartingY());
+        move(currentQLearning.getBoard().getAgent().getX(), currentQLearning.getBoard().getAgent().getY());
+
+    }
+
+    private static void updateImages(Board board) {
+        Cell[][] cells = board.getCells();
         ImageView imageView = null;
         for (int i = 0; i < cells.length; i++) {
             for (int j = 0; j < cells[i].length; j++) {
-                int currentCell = cells[i][j];
-                if (currentCell > 0) {
+                Cell currentCell = cells[i][j];
+                if (currentCell.getType() == Cell.Type.Food) {
                     imageView = new ImageView(foodImage);
-                } else if (currentCell == -1) {
+                } else if (currentCell.getType() == Cell.Type.Poison) {
                     imageView = new ImageView(poisonImage);
                 } else {
-                    imageView = new ImageView();
+                    imageView = updateActionImages(i,j);
                 }
                 imageView.setFitWidth(WIDTH);
                 imageView.setFitHeight(HEIGHT);
                 if (referenceArray[i][j] != null) {
                     flatlandGrid.getChildren().remove(referenceArray[i][j]);
                 }
-                flatlandGrid.add(imageView, j, i);
+                flatlandGrid.add(imageView, i, j);
                 referenceArray[i][j] = imageView;
             }
         }
-        move(currentAgent.getX(), currentAgent.getY());
-
     }
 
     public static void playTimeStep() {
-        if (timeStep == 0) {
+        currentQLearning.playStep();
+        currentQLearning.getBoard().reward(currentQLearning.getBoard().getAgent().getPosition());
+        updateImages(currentQLearning.getBoard());
+        move(currentQLearning.getBoard().getAgent().getX(), currentQLearning.getBoard().getAgent().getY());
+
+        /*if (timeStep == 0) {
             //currentAgent.eat(currentBoard);
         }
         //currentAgent.playStep(currentBoard);
         move(currentAgent.getX(), currentAgent.getY());
         timeStep++;
-        updateLabels(currentAgent);
+        updateLabels(currentAgent);*/
     }
 
     public static void move(int x, int y) {
-        switch (currentAgent.getHeadDirection()) {
+        switch (currentQLearning.getBoard().getAgent().getHeadDirection()) {
             case Left:
                 agentImageView.rotateProperty().setValue(-90);
                 break;
@@ -208,6 +231,28 @@ public class FlatlandGui {
         emptyImageView.setFitWidth(WIDTH);
         emptyImageView.setFitHeight(HEIGHT);
         flatlandGrid.add(emptyImageView, x, y);
+    }
+
+    public static ImageView updateActionImages(int x, int y) {
+        Agent.Direction action = currentQLearning.findBestAction(currentQLearning.getBoard(), new Position(x, y), false);
+        ImageView imageView;
+        switch (action) {
+            case Up:
+                imageView = new ImageView(upArrowImage);
+                break;
+            case Left:
+                imageView = new ImageView(leftArrowImage);
+                break;
+            case Right:
+                imageView = new ImageView(rightArrowImage);
+                break;
+            case Down:
+                imageView = new ImageView(downArrowImage);
+                break;
+            default:
+                imageView = new ImageView();
+        }
+        return imageView;
     }
 
     public static void updateLabels(Agent agent) {

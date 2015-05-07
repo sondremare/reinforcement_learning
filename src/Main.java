@@ -1,5 +1,6 @@
 import flatland.Agent;
 import flatland.Board;
+import flatland.Cell;
 import gui.FlatlandGui;
 import javafx.application.Application;
 import javafx.event.ActionEvent;
@@ -9,12 +10,12 @@ import javafx.scene.control.Button;
 import javafx.scene.layout.GridPane;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import learning.QLearning;
 
 import java.io.*;
 
 public class Main extends Application {
 
-    private Agent agent;
     private Board board;
 
     private static final int WIDTH_PARAM = 0;
@@ -61,6 +62,8 @@ public class Main extends Application {
                         int height = 0;
                         int width = 0;
                         int foods = 0;
+                        int xPos = 0;
+                        int yPos = 0;
 
                         int counter = 0;
                         String line;
@@ -73,9 +76,8 @@ public class Main extends Application {
                                 foods = Integer.parseInt(boardParams[FOODS_PARAM]);
                                 boardValues = new int[height][width];
 
-                                int xPos = Integer.parseInt(boardParams[X_PARAM]);
-                                int yPos = Integer.parseInt(boardParams[Y_PARAM]);
-                                agent = new Agent(xPos, yPos);
+                                xPos = Integer.parseInt(boardParams[X_PARAM]);
+                                yPos = Integer.parseInt(boardParams[Y_PARAM]);
                                 firstLine = false;
                             } else {
                                 System.out.println(line);
@@ -86,10 +88,25 @@ public class Main extends Application {
                                 counter++;
                             }
                         }
+                        Cell[][] correctlyFlippedBoardValues = new Cell[width][height];
+                        for (int i = 0; i < boardValues.length; i++) {
+                            for (int j = 0; j < boardValues[i].length; j++) {
+                                int val = boardValues[i][j];
+                                if (val > 0) {
+                                    correctlyFlippedBoardValues[j][i] = new Cell(Cell.Type.Food, val);
+                                } else if (val == -1) {
+                                    correctlyFlippedBoardValues[j][i] = new Cell(Cell.Type.Poison, val);
+                                } else {
+                                    correctlyFlippedBoardValues[j][i] = new Cell(Cell.Type.Nothing, val);
+                                }
+                            }
+                        }
                         fileReader.close();
-                        board = new Board(boardValues, foods);
+                        board = new Board(correctlyFlippedBoardValues, foods, xPos, yPos);
+                        QLearning qLearning = new QLearning(board);
+                        qLearning.iterate(100);
                         if (gridPane.getChildren().size() > 1) gridPane.getChildren().remove(1);
-                        gridPane.add(FlatlandGui.initGUI(board, agent), 0, 1);
+                        gridPane.add(FlatlandGui.initGUI(qLearning), 0, 1);
 
                     } catch (Exception e) {
                         e.printStackTrace();
