@@ -75,22 +75,24 @@ public class Board {
     }
 
     public double reward(Position position) {
-        double reward = 0;
-        reward += STEP_PENALTY;
+        double reward = STEP_PENALTY;
+        //reward += ;
         if (isFinished()) {
-            return reward += RETURN_HOME_REWARD;
+            return reward = RETURN_HOME_REWARD;
         }
         double cellValue = getCellValue(position);
         if (cellValue > 0) {
-            reward += EAT_FOOD_REWARD;
-            emptyCellValue(position);
-            updateBoardStringRepresentation();
+            reward = EAT_FOOD_REWARD;
         } else if (cellValue == -1) {
-            reward += EAT_POISON_PENALTY;
-            emptyCellValue(position);
+            reward = EAT_POISON_PENALTY;
         }
 
         return reward;
+    }
+
+    public void eat(Position position) {
+        emptyCellValue(position);
+        updateBoardStringRepresentation();
     }
 
     public int getCellValue(Position position) {

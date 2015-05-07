@@ -17,6 +17,9 @@ import javafx.scene.layout.GridPane;
 import javafx.util.Duration;
 import learning.QLearning;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class FlatlandGui {
     private static double PLAY_SPEED = 150;
     private static boolean isPlaying = false;
@@ -89,7 +92,7 @@ public class FlatlandGui {
                     loop = new Timeline(new KeyFrame(Duration.millis(PLAY_SPEED), new EventHandler<ActionEvent>() {
                         @Override
                         public void handle(ActionEvent actionEvent) {
-                            if (timeStep < Agent.MAX_TIMESTEPS) {
+                            if (!currentQLearning.getBoard().isFinished()) {
                                 playTimeStep();
                             }
                         }
@@ -195,7 +198,7 @@ public class FlatlandGui {
 
     public static void playTimeStep() {
         currentQLearning.playStep();
-        currentQLearning.getBoard().reward(currentQLearning.getBoard().getAgent().getPosition());
+        currentQLearning.getBoard().eat(currentQLearning.getBoard().getAgent().getPosition());
         updateImages(currentQLearning.getBoard());
         move(currentQLearning.getBoard().getAgent().getX(), currentQLearning.getBoard().getAgent().getY());
 
@@ -225,12 +228,6 @@ public class FlatlandGui {
         }
         agentImageView.setX(x * WIDTH);
         agentImageView.setY(y * HEIGHT);
-
-        flatlandGrid.getChildren().remove(referenceArray[x][y]);
-        ImageView emptyImageView = new ImageView();
-        emptyImageView.setFitWidth(WIDTH);
-        emptyImageView.setFitHeight(HEIGHT);
-        flatlandGrid.add(emptyImageView, x, y);
     }
 
     public static ImageView updateActionImages(int x, int y) {

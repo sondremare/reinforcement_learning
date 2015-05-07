@@ -13,8 +13,8 @@ public class QLearning {
     private int numberOfActions = ACTIONS.size();
     private Board board;
 
-    private double learningRate = 0.5;
-    private double discountRate = 1;
+    private double learningRate;
+    private double discountRate;
 
 
     public QLearning(Board board) {
@@ -29,6 +29,7 @@ public class QLearning {
             for (int j = 0; j < board.getHeight(); j++) {
                 for (int k = 0; k < ACTIONS.size(); k++) {
                     String key = "" + i + j + k + boardRepresentation;
+                    //String key = ""+i+","+j+":"+boardRepresentation+":"+ACTIONS.get(k);
                     qStates.put(key, 0.0);
                 }
             }
@@ -39,9 +40,9 @@ public class QLearning {
         return board;
     }
 
-    public String getKey(Agent.Direction action) {
-        Position agentPosition = board.getAgent().getPosition();
-        return ""+agentPosition.getX()+agentPosition.getY()+ACTIONS.indexOf(action)+board.getBoardStringRepresentation();
+    public String getKey(Agent.Direction action, Position position) {
+        return ""+position.getX()+position.getY()+ACTIONS.indexOf(action)+board.getBoardStringRepresentation();
+        //return ""+position.getX()+","+position.getY()+":"+board.getBoardStringRepresentation()+":"+action;
     }
 
     public void playStep() {
@@ -56,31 +57,32 @@ public class QLearning {
             board = board.clone();
             while (!board.isFinished()) {
                 learningRate = 1;//(double)1/(i+1);
-                discountRate = 1;//(double)1/(i+1);
-                action = selectAction(board, 0.5);//(double)1/(i+1));
-                String oldStateKey = getKey(action); //agentPosition.getX()+agentPosition.getY()+ACTIONS.indexOf(action)+board.getBoardStringRepresentation();
+                discountRate = 0.9;//(double)1/(i+1);
+                double probability = (double)1/(i+1);//0.8 - ((double)i/(double)(1.5 * count));
+                action = selectAction(board, probability);//(double)1/(i+1));
+                Position currentPosition = new Position(board.getAgent().getPosition());
                 board.play(action);
-                updateQValue(action);
+                updateQValue(action, currentPosition);
             }
         }
     }
 
-    public void updateQValue(Agent.Direction action) {
-        Object state = qStates.get(getKey(action));
+    public void updateQValue(Agent.Direction action, Position currentPosition) {
+        Object state = qStates.get(getKey(action, currentPosition));
         double oldVal = 0.0;
         if (state != null) oldVal = (Double)state;
-        double max = getBestActionValue();
-        String key = getKey(action);
+        double max = getBestActionValue(board.getAgent().getPosition());
         double reward = board.reward(board.getAgent().getPosition());
         double newVal = oldVal + learningRate * ( reward  + discountRate * max - oldVal);
-        qStates.put(key, newVal);
+        qStates.put(getKey(action, currentPosition), newVal);
+        board.eat(board.getAgent().getPosition());
     }
 
-    public double getBestActionValue() {
+    public double getBestActionValue(Position position) {
         double max = -Double.MAX_VALUE;
         for (Agent.Direction action : ACTIONS) {
             double val = 0.0;
-            Object state = qStates.get(getKey(action));
+            Object state = qStates.get(getKey(action, position));
             if (state != null) val = (Double) state;
             if (val > max) {
                 max = val;
@@ -103,6 +105,7 @@ public class QLearning {
         String boardRepresentation = board.getBoardStringRepresentation();
         for (int i = 0; i < ACTIONS.size(); i++) {
             String key = "" + position.getX() + position.getY() + i + boardRepresentation;
+            //String key = "" + position.getX()+","+position.getY()+":"+boardRepresentation+":"+ACTIONS.get(i);
             double value = 0.0;
             Object state = qStates.get(key);
             if (state != null) value = (Double) state;
@@ -117,5 +120,9 @@ public class QLearning {
 
     public void setBoard(Board board) {
         this.board = board;
+    }
+
+    public HashMap<String, Double> getStates() {
+        return qStates;
     }
 }
