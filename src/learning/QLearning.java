@@ -40,7 +40,6 @@ public class QLearning {
         long now = System.currentTimeMillis();
         Agent.Direction action;
         for (int i = 0; i < count; i++) {
-            System.out.println(i);
             board = board.clone();
             while (!board.isFinished()) {
                 learningRate = 1;//(double)1/(i+1);
@@ -51,6 +50,7 @@ public class QLearning {
                 board.play(action);
                 updateQValue(action, currentPosition);
             }
+            System.out.println(i);
         }
         long later = System.currentTimeMillis();
         double runTime = (double)(later - now)/1000;

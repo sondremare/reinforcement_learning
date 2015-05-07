@@ -50,7 +50,7 @@ public class Main extends Application {
         controlPane.add(learnButton, 3, 0);
 
         final GridPane gridPane = new GridPane();
-        gridPane.setPrefSize(1000, 525);
+        gridPane.setPrefSize(1200, 525);
         gridPane.add(controlPane, 0, 0);
 
         primaryStage.setScene(new Scene(gridPane));
