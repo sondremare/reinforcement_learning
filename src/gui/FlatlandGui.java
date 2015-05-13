@@ -39,6 +39,7 @@ public class FlatlandGui {
     private static Label stepCountLabel;
     private static Label foodEatenLabel;
     private static Label poisonEatenLabel;
+    private static Board originalBoard;
 
     public static AnchorPane initGUI(QLearning qLearning) {
         timeStep = 0;
@@ -52,7 +53,8 @@ public class FlatlandGui {
         agentImageView.setFitWidth(WIDTH);
 
         currentQLearning = qLearning;
-        currentQLearning.setBoard(currentQLearning.getBoard().clone());
+        originalBoard = currentQLearning.getBoard();
+        currentQLearning.setBoard(originalBoard.clone());
         setBoard();
 
         GridPane controlPanel = new GridPane();
@@ -110,6 +112,20 @@ public class FlatlandGui {
             }
         });
 
+        Button replayButton = new Button("Replay board");
+        replayButton.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent actionEvent) {
+                currentQLearning.setBoard(originalBoard.clone());
+                for (int i = 0; i < referenceArray.length; i++) {
+                    for (int j = 0; j < referenceArray[i].length; j++) {
+                        flatlandGrid.getChildren().remove(referenceArray[i][j]);
+                    }
+                }
+                setBoard();
+            }
+        });
+
         controlPanel.add(stepCountLabel, 0, 0);
         controlPanel.add(foodEatenLabel, 0, 1);
         controlPanel.add(poisonEatenLabel, 0, 2);
@@ -117,6 +133,7 @@ public class FlatlandGui {
         controlPanel.add(playButton, 0, 4);
         controlPanel.add(playSpeedSlider, 0, 5);
         controlPanel.add(playSpeedValue, 1, 6);
+        controlPanel.add(replayButton, 0, 7);
 
         GridPane mainGrid = new GridPane();
         mainGrid.add(flatlandGrid, 0, 0);
@@ -168,8 +185,9 @@ public class FlatlandGui {
         currentQLearning.getBoard().eat(currentQLearning.getBoard().getAgent().getPosition());
         updateImages(currentQLearning.getBoard());
         move(currentQLearning.getBoard().getAgent().getX(), currentQLearning.getBoard().getAgent().getY());
-        updateLabels(currentQLearning.getBoard());
         timeStep++;
+        updateLabels(currentQLearning.getBoard());
+
     }
 
     public static void move(int x, int y) {

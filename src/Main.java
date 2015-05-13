@@ -7,6 +7,7 @@ import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
@@ -41,13 +42,16 @@ public class Main extends Application {
         Label iterationsLabel = new Label("Iterations: ");
         final TextField iterationsInput = new TextField("100");
         iterationsInput.setPrefWidth(100);
+        final CheckBox useEligibilityTracesCheckbox = new CheckBox("Eligibility traces");
+        useEligibilityTracesCheckbox.setSelected(false);
         Button learnButton = new Button("Learn!");
 
         GridPane controlPane = new GridPane();
         controlPane.add(openFileButton, 0, 0);
         controlPane.add(iterationsLabel, 1, 0);
         controlPane.add(iterationsInput, 2, 0);
-        controlPane.add(learnButton, 3, 0);
+        controlPane.add(useEligibilityTracesCheckbox, 3, 0);
+        controlPane.add(learnButton, 4, 0);
 
         final GridPane gridPane = new GridPane();
         gridPane.setPrefSize(1200, 525);
@@ -128,7 +132,8 @@ public class Main extends Application {
             public void handle(ActionEvent actionEvent) {
                 if (board != null) {
                     int iterations = Integer.parseInt(iterationsInput.getText());
-                    QLearning qLearning = new QLearning(board);
+                    boolean useEligibilityTraces = useEligibilityTracesCheckbox.isSelected();
+                    QLearning qLearning = new QLearning(board, useEligibilityTraces);
                     qLearning.iterate(iterations);
                     if (gridPane.getChildren().size() > 1) gridPane.getChildren().remove(1);
                     gridPane.add(FlatlandGui.initGUI(qLearning), 0, 1);
