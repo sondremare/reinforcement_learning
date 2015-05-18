@@ -15,17 +15,16 @@ public class QLearning {
     private static final List<Agent.Direction> ACTIONS = Arrays.asList(Agent.Direction.values());
     private int numberOfActions = ACTIONS.size();
     private Board board;
-    private boolean isBestAction = false;
-    private boolean useEligibilityTraces;
 
-    private double learningRate;
-    private double discountRate;
-    private double traceDecayFactor;
+    public static boolean useEligibilityTraces;
+    public static boolean useSoftMax;
+    public static double learningRate;
+    public static double discountRate;
+    public static double traceDecayFactor;
 
 
-    public QLearning(Board board, boolean useEligibilityTraces) {
+    public QLearning(Board board) {
         this.qStates = new HashMap<String, Double>();
-        this.useEligibilityTraces = useEligibilityTraces;
         this.board = board;
     }
 
@@ -45,6 +44,9 @@ public class QLearning {
     public void iterate(int count) {
         long now = System.currentTimeMillis();
         Agent.Direction action;
+        double temperatureMax = 10;
+        double temperatureMin = 0.1;
+
         for (int i = 0; i < count; i++) {
             board = board.clone();
             if (useEligibilityTraces) {
@@ -53,11 +55,13 @@ public class QLearning {
             }
             double probability = (double)1/(i+1);
             while (!board.isFinished()) {
-                learningRate = 0.1;//(double)1/(i+1);
-                discountRate = 0.9;//(double)1/(i+1);
-                traceDecayFactor = 0.9;
-                action = selectAction(board, probability);
                 Position currentPosition = new Position(board.getAgent().getPosition());
+                if (useSoftMax) {
+                    double temperature = temperatureMin + ((temperatureMax - temperatureMin)/(double)count)*(count - i);
+                    action = getActionWithBoltzmannProbability(currentPosition, temperature);
+                } else {
+                    action = selectAction(board, probability);
+                }
                 board.play(action);
                 updateQValue(action, currentPosition);
             }
@@ -79,7 +83,8 @@ public class QLearning {
         if (useEligibilityTraces) {
             visitedStates.add(currentKey);
             double eVal = getEligibilityValue(currentKey);
-            if (isBestAction) {
+            double qMax = getBestActionValue(currentPosition);
+            if (qMax == oldVal) {
                 eligibilityTraces.put(currentKey, eVal + 1);
             } else {
                 eligibilityTraces.put(currentKey, 0.0);
@@ -110,6 +115,28 @@ public class QLearning {
         }
     }
 
+    public Agent.Direction getActionWithBoltzmannProbability(Position currentPosition, double temperature) {
+        double sum = 0.0;
+        double[] values = new double[ACTIONS.size()];
+        for (Agent.Direction action : ACTIONS) {
+            String key = getKey(action, currentPosition);
+            try {
+                values[ACTIONS.indexOf(action)] = qStates.get(key);
+            } catch (Exception e) {
+                qStates.put(key, Board.EAT_FOOD_REWARD);
+                values[ACTIONS.indexOf(action)] = Board.EAT_FOOD_REWARD;
+            }
+            sum += Math.exp(values[ACTIONS.indexOf(action)] / temperature);
+        }
+        NavigableMap<Double, Agent.Direction> rouletteWheelMap = new TreeMap<Double, Agent.Direction>();
+        double accumulatedRange = 0;
+        for (Agent.Direction action : ACTIONS) {
+            accumulatedRange += Math.exp(values[ACTIONS.indexOf(action)] / temperature) / sum;
+            rouletteWheelMap.put(accumulatedRange, action);
+        }
+        return rouletteWheelMap.ceilingEntry(random.nextDouble() * accumulatedRange).getValue();
+    }
+
     public double getQValue(String key) {
         Object sap = qStates.get(key);
         return (sap != null) ? (Double)sap : 0.0;
@@ -133,10 +160,8 @@ public class QLearning {
 
     private Agent.Direction selectAction(Board board, double probability) {
         if (probability >= random.nextDouble()) {
-            isBestAction = false;
             return ACTIONS.get(random.nextInt(numberOfActions));
         } else {
-            isBestAction = true;
             return findBestAction(board, board.getAgent().getPosition(), true);
         }
     }

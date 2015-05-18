@@ -11,11 +11,11 @@ public class Board {
     private int startingY;
     private Agent agent;
     private String boardStringRepresentation;
-    private static int EMPTY_CELL = 0;
-    private static int STEP_PENALTY = -1;
-    private static int EAT_FOOD_REWARD = 10;
-    private static int EAT_POISON_PENALTY = -15;
-    private static int RETURN_HOME_REWARD = 10;
+    public static int EMPTY_CELL = 0;
+    public static double STEP_PENALTY = -1;
+    public static double EAT_FOOD_REWARD = 10;
+    public static double EAT_POISON_PENALTY = -15;
+    public static double RETURN_HOME_REWARD = 10;
     
     public Board(Cell[][] cells, int foods, int startingX, int startingY) {
         this.board = cells;
@@ -79,9 +79,8 @@ public class Board {
 
     public double reward(Position position) {
         double reward = STEP_PENALTY;
-        //reward += ;
         if (isFinished()) {
-            return reward = RETURN_HOME_REWARD;
+            return RETURN_HOME_REWARD;
         }
         Cell.Type cellType = getCellType(position);
         if (cellType == Cell.Type.Food) {
@@ -89,7 +88,6 @@ public class Board {
         } else if (cellType == Cell.Type.Poison) {
             reward = EAT_POISON_PENALTY;
         }
-
         return reward;
     }
 

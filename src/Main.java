@@ -1,4 +1,3 @@
-import flatland.Agent;
 import flatland.Board;
 import flatland.Cell;
 import gui.FlatlandGui;
@@ -15,7 +14,6 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import learning.QLearning;
 
-import javax.xml.soap.Text;
 import java.io.*;
 
 public class Main extends Application {
@@ -39,19 +37,36 @@ public class Main extends Application {
         final FileChooser fileChooser = new FileChooser();
 
         Button openFileButton = new Button("Choose file");
-        Label iterationsLabel = new Label("Iterations: ");
-        final TextField iterationsInput = new TextField("100");
-        iterationsInput.setPrefWidth(100);
+        Label iterationsLabel = new Label("It: ");
+        final TextField iterationsInput = new TextField("1000");
+        iterationsInput.setPrefWidth(50);
+        Label learningRateLabel = new Label("alpha: ");
+        final TextField learningRateInput = new TextField("0.1");
+        learningRateInput.setPrefWidth(30);
+        Label discountRateLabel = new Label("gamma: ");
+        final TextField discountRateInput = new TextField("0.9");
+        discountRateInput.setPrefWidth(30);
+        Label traceDecayRateLabel = new Label("lambda: ");
+        final TextField traceDecayRateInput = new TextField("0.9");
+        traceDecayRateInput.setPrefWidth(30);
         final CheckBox useEligibilityTracesCheckbox = new CheckBox("Eligibility traces");
         useEligibilityTracesCheckbox.setSelected(false);
+        final CheckBox useSoftMaxCheckbox = new CheckBox("SoftMax");
         Button learnButton = new Button("Learn!");
 
         GridPane controlPane = new GridPane();
         controlPane.add(openFileButton, 0, 0);
         controlPane.add(iterationsLabel, 1, 0);
         controlPane.add(iterationsInput, 2, 0);
-        controlPane.add(useEligibilityTracesCheckbox, 3, 0);
-        controlPane.add(learnButton, 4, 0);
+        controlPane.add(learningRateLabel, 3, 0);
+        controlPane.add(learningRateInput, 4, 0);
+        controlPane.add(discountRateLabel, 5, 0);
+        controlPane.add(discountRateInput, 6, 0);
+        controlPane.add(traceDecayRateLabel, 7, 0);
+        controlPane.add(traceDecayRateInput, 8, 0);
+        controlPane.add(useEligibilityTracesCheckbox, 9, 0);
+        controlPane.add(useSoftMaxCheckbox, 10, 0);
+        controlPane.add(learnButton, 11, 0);
 
         final GridPane gridPane = new GridPane();
         gridPane.setPrefSize(1200, 525);
@@ -132,8 +147,12 @@ public class Main extends Application {
             public void handle(ActionEvent actionEvent) {
                 if (board != null) {
                     int iterations = Integer.parseInt(iterationsInput.getText());
-                    boolean useEligibilityTraces = useEligibilityTracesCheckbox.isSelected();
-                    QLearning qLearning = new QLearning(board, useEligibilityTraces);
+                    QLearning.learningRate = Double.parseDouble(learningRateInput.getText());
+                    QLearning.discountRate = Double.parseDouble(discountRateInput.getText());
+                    QLearning.traceDecayFactor = Double.parseDouble(traceDecayRateInput.getText());
+                    QLearning.useEligibilityTraces = useEligibilityTracesCheckbox.isSelected();
+                    QLearning.useSoftMax = useSoftMaxCheckbox.isSelected();
+                    QLearning qLearning = new QLearning(board);
                     qLearning.iterate(iterations);
                     if (gridPane.getChildren().size() > 1) gridPane.getChildren().remove(1);
                     gridPane.add(FlatlandGui.initGUI(qLearning), 0, 1);
